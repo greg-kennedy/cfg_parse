@@ -1,9 +1,14 @@
 #include "cfg_parse.h"
 
+/* for malloc, EXIT_SUCCESS and _FAILURE, exit */
 #include <stdlib.h>
+/* for FILE *, printf, etc */
 #include <stdio.h>
+/* for memset, strlen, strchr etc */
 #include <string.h>
-
+/* for tolower */
+#include <ctype.h>
+/* for errno in cfg_mallog */
 #include <errno.h>
 
 /* implementation details of (opaque) config structures */
@@ -157,6 +162,7 @@ int cfg_save(const struct cfg_struct *cfg, const char *filename)
  */
 const char * cfg_get(const struct cfg_struct *cfg, const char *key)
 {
+  unsigned int i, len;
   char *tkey;
   struct cfg_node *temp;
 
@@ -168,6 +174,11 @@ const char * cfg_get(const struct cfg_struct *cfg, const char *key)
 
   /* Exclude empty key */
   if (! strcmp(tkey,"")) { free(tkey); return NULL; }
+
+  /* Lowercase key */
+  len = strlen(tkey);
+  for (i = 0; i < len; i++)
+    tkey[i] = tolower(tkey[i]);
 
   /* set up pointer to start of list */
   temp = cfg->head;
@@ -198,6 +209,7 @@ const char * cfg_get(const struct cfg_struct *cfg, const char *key)
  */
 void cfg_set(struct cfg_struct *cfg, const char *key, const char *value)
 {
+  unsigned int i, len;
   char *tkey, *tvalue;
   struct cfg_node *temp;
 
@@ -208,6 +220,11 @@ void cfg_set(struct cfg_struct *cfg, const char *key, const char *value)
   tkey = cfg_trim(key);
   /* Exclude empty key */
   if (! strcmp(tkey,"")) { free(tkey); return; }
+
+  /* Lowercase key */
+  len = strlen(tkey);
+  for (i = 0; i < len; i++)
+    tkey[i] = tolower(tkey[i]);
 
   /* Trim value. */
   tvalue = cfg_trim(value);
@@ -255,8 +272,9 @@ void cfg_set(struct cfg_struct *cfg, const char *key, const char *value)
  */
 void cfg_delete(struct cfg_struct *cfg, const char *key)
 {
+  unsigned int i, len;
   char *tkey;
-  struct cfg_node *temp, *temp2;
+  struct cfg_node *temp, *temp2 = NULL;
 
   /* safety check: null input */
   if (cfg == NULL || key == NULL) return;
@@ -265,6 +283,11 @@ void cfg_delete(struct cfg_struct *cfg, const char *key)
   tkey = cfg_trim(key);
   /* Exclude empty key */
   if (! strcmp(tkey,"")) { free(tkey); return; }
+
+  /* Lowercase key */
+  len = strlen(tkey);
+  for (i = 0; i < len; i++)
+    tkey[i] = tolower(tkey[i]);
 
   /* set pointer to start of list */
   temp = cfg->head;

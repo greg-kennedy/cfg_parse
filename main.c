@@ -35,8 +35,8 @@ int main()
   /* Retrieve the value for key "KEY", and print */
   printf("KEY = %s\n",cfg_get(cfg,"KEY"));
 
-  /* Delete the key-value pair for "DELETE_ME" */
-  cfg_delete(cfg,"DELETE_ME");
+  /* Delete the key-value pair for "DeLeTe_Me" */
+  cfg_delete(cfg,"DeLeTe_Me");
 
   /* Dump cfg-struct to disk. */
   cfg_save(cfg,"config_new.ini");
