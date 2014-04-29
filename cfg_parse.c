@@ -8,7 +8,7 @@
 #include <string.h>
 /* for tolower */
 #include <ctype.h>
-/* for errno in cfg_mallog */
+/* for errno in cfg_malloc */
 #include <errno.h>
 
 /* implementation details of (opaque) config structures */
@@ -34,14 +34,20 @@ static void *cfg_malloc(const unsigned int size)
   {
     fprintf(stderr,"CFG_PARSE ERROR: MALLOC(%u) returned NULL (errno==",size);
     if (errno == ENOMEM)
-	  fprintf(stderr, "ENOMEM");
-	else
-	  fprintf(stderr, "%d, ENOMEM==%d",errno,ENOMEM);
+      fprintf(stderr, "ENOMEM");
+    else
+      fprintf(stderr, "%d, ENOMEM==%d",errno,ENOMEM);
     fprintf(stderr,")\n");
     exit(EXIT_FAILURE);
   }
   memset(temp,0,size);
   return temp;
+}
+
+/* Determines if a character is a whitespace (blank) character or not. */
+static char cfg_is_whitespace(const char c)
+{
+  return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
 }
 
 /* Returns a duplicate of input str, without leading / trailing whitespace
@@ -55,15 +61,14 @@ static char *cfg_trim(const char *str)
   if (str == NULL) return NULL;
 
   /* advance start pointer to first non-whitespace char */
-  while (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r')
+  while (cfg_is_whitespace(*str))
     str ++;
 
   /* calculate length of output string, minus leading whitespace */
   temp_len = strlen(str);
 
   /* roll back length until we run out of whitespace */
-  while (temp_len > 0 &&
-      (str[temp_len-1] == ' ' || str[temp_len-1] == '\t' || str[temp_len-1] == '\n' || str[temp_len-1] == '\r'))
+  while (temp_len > 0 && cfg_is_whitespace(str[temp_len-1]))
     temp_len --;
 
   /* copy portion of string to new string */
