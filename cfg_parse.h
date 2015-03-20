@@ -10,6 +10,11 @@
 #ifndef CFG_STRUCT_H_
 #define CFG_STRUCT_H_
 
+/* Declare C-style name mangling, this makes mixing with c++ compilers possible */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Sets the maximum size of a line in a configuration file.
  * cfg_load uses this definition to limit the size of its read buffer.  Lines which exceed the
@@ -54,5 +59,9 @@ void cfg_set(struct cfg_struct *, const char *, const char *);
  * @brief Deletes a key (and associated value) from a cfg_struct.
  */
 void cfg_delete(struct cfg_struct *, const char *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
