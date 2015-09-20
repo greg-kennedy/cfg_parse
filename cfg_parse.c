@@ -270,6 +270,20 @@ void cfg_set(struct cfg_struct *cfg, const char *key, const char *value)
 }
 
 /**
+ * This function sets multiple key-value pairs in a cfg_struct.
+ * @param cfg Pointer to cfg_struct to search.
+ * @param keys Array of strings containing key to search for.
+ * @param values Array of strings containing new value to assign to key.
+ * @param count Length of keys / values arrays
+ */
+void cfg_set_array(struct cfg_struct *cfg, const char *keys[], const char *values[], const unsigned int count)
+{
+  unsigned int i;
+  for (i = 0; i < count; i ++)
+    cfg_set(cfg,keys[i],values[i]);
+}
+
+/**
  * This function deletes a key-value pair from a cfg_struct.
  * If the key does not exist, the function does nothing.
  * @param cfg Pointer to cfg_struct to search.
@@ -329,6 +343,19 @@ void cfg_delete(struct cfg_struct *cfg, const char *key)
   /* not found */
   /* cleanup trimmed key */
   free(tkey);
+}
+
+/**
+ * This function deletes multiple key-value pairs from a cfg_struct.
+ * @param cfg Pointer to cfg_struct to search.
+ * @param keys Array of strings containing key to search for.
+ * @param count Length of keys / values arrays
+ */
+void cfg_delete_array(struct cfg_struct *cfg, const char *keys[], const unsigned int count)
+{
+  unsigned int i;
+  for (i = 0; i < count; i ++)
+    cfg_delete(cfg,keys[i]);
 }
 
 /**

@@ -56,9 +56,19 @@ const char * cfg_get(const struct cfg_struct *, const char *);
 void cfg_set(struct cfg_struct *, const char *, const char *);
 
 /**
+ * @brief Sets a key, value pair in a cfg_struct.
+ */
+void cfg_set_array(struct cfg_struct *, const char **, const char **, unsigned int);
+
+/**
  * @brief Deletes a key (and associated value) from a cfg_struct.
  */
 void cfg_delete(struct cfg_struct *, const char *);
+
+/**
+ * @brief Deletes a key (and associated value) from a cfg_struct.
+ */
+void cfg_delete_array(struct cfg_struct *, const char **, unsigned int);
 
 #ifdef __cplusplus
 }
