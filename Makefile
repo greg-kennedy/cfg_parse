@@ -1,9 +1,10 @@
-CC=cc
+CC ?= cc
+
+CFLAGS += -Wall -Wextra -ansi -pedantic
 
 all:	cfg_parse.c main.c cfg_parse.h
-	$(CC) -Wall -Wextra -ansi -pedantic -O2 -pipe -fomit-frame-pointer -march=native -c cfg_parse.c
-	$(CC) -Wall                         -O2 -pipe -fomit-frame-pointer -march=native -c main.c
-	$(CC) -Wall -Wextra -ansi -pedantic -O2 -pipe -fomit-frame-pointer -march=native -o test *.o
+	$(CC) $(CFLAGS) -c cfg_parse.c
+	$(CC) $(CFLAGS) -o test main.c cfg_parse.o
 
 test:	all
 	./test
