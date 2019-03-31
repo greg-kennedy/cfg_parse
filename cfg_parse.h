@@ -76,6 +76,11 @@ void cfg_delete(struct cfg_struct* cfg, const char* key);
  */
 void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], size_t count);
 
+/**
+ * @brief Deletes all entries not found in keys[] from a cfg_struct.
+ */
+void cfg_prune(struct cfg_struct* cfg, const char* keys[], size_t count);
+
 #ifdef __cplusplus
 }
 #endif

@@ -42,6 +42,7 @@ int main()
   /* Try the array functions */
   cfg_set_array(cfg, arrayKeys, arrayValues, 2);
   cfg_delete_array(cfg, arrayKeys, 2);
+  /* cfg_prune(cfg, arrayKeys, 2); */
 
   /* Delete the key-value pair for "DeLeTe_Me" */
   cfg_delete(cfg,"DeLeTe_Me");
