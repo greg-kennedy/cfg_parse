@@ -7,7 +7,11 @@
 int main()
 {
   /* Pointer to a cfg_struct structure */
-  struct cfg_struct *cfg;
+  struct cfg_struct* cfg;
+
+  /* some data */
+  const char* arrayKeys[] = {"ARRAY_KEY_1", "ARRAY_KEY_2"};
+  const char* arrayValues[] = {"ARRAY_VALUE_1", "ARRAY_VALUE_2"};
 
   /* Initialize config struct */
   cfg = cfg_init();
@@ -34,6 +38,10 @@ int main()
 
   /* Retrieve the value for key "KEY", and print */
   printf("KEY = %s\n",cfg_get(cfg,"KEY"));
+
+  /* Try the array functions */
+  cfg_set_array(cfg, arrayKeys, arrayValues, 2);
+  cfg_delete_array(cfg, arrayKeys, 2);
 
   /* Delete the key-value pair for "DeLeTe_Me" */
   cfg_delete(cfg,"DeLeTe_Me");

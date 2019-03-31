@@ -8,14 +8,10 @@
  * pointer to the functions here.
  * At end of use, call cfg_delete to clean up the object.
  */
-#ifndef CFG_STRUCT_H_
-#define CFG_STRUCT_H_
+#ifndef CFG_PARSE_H_
+#define CFG_PARSE_H_
 
-/* Declare C-style name mangling,
-	this makes mixing with c++ compilers possible */
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stddef.h>
 
 /**
  * @brief Sets the maximum size of a line in a configuration file.
@@ -28,6 +24,12 @@ extern "C" {
 
 /* Opaque data structure holding config in memory */
 struct cfg_struct;
+
+/* Declare C-style name mangling,
+	this makes mixing with c++ compilers possible */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Creates a cfg_struct.
@@ -60,9 +62,9 @@ const char* cfg_get(const struct cfg_struct* cfg, const char* key);
 void cfg_set(struct cfg_struct* cfg, const char* key, const char* value);
 
 /**
- * @brief Sets a key, value pair in a cfg_struct.
+ * @brief Sets multiple key, value pairs in a cfg_struct.
  */
-void cfg_set_array(struct cfg_struct* cfg, const char* keys[], const char* values[], unsigned int count);
+void cfg_set_array(struct cfg_struct* cfg, const char* keys[], const char* values[], size_t count);
 
 /**
  * @brief Deletes a key (and associated value) from a cfg_struct.
@@ -70,9 +72,9 @@ void cfg_set_array(struct cfg_struct* cfg, const char* keys[], const char* value
 void cfg_delete(struct cfg_struct* cfg, const char* key);
 
 /**
- * @brief Deletes a key (and associated value) from a cfg_struct.
+ * @brief Deletes multiple keys (and associated values) from a cfg_struct.
  */
-void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], unsigned int count);
+void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], size_t count);
 
 #ifdef __cplusplus
 }
