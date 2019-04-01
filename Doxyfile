@@ -12,4 +12,4 @@ GENERATE_TREEVIEW	= YES
 SEARCHENGINE	= NO
 
 GENERATE_LATEX	= NO
-INPUT			= README.dox cfg_parse.c cfg_parse.h
+INPUT	= README.dox cfg_parse.c cfg_parse.h

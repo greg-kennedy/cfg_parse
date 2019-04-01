@@ -3,6 +3,24 @@
 #include "cfg_parse.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+
+void print_keys(struct cfg_struct* cfg)
+{
+  char** keys;
+  size_t count;
+  size_t i;
+
+  keys = cfg_get_keys(cfg, &count);
+
+  printf("Keys (%lu total):\n", (unsigned long)count);
+  for (i = 0; i < count; i ++)
+  {
+    printf(" [%02lu] '%s'\n", (unsigned long)i, keys[i]);
+    free(keys[i]);
+  }
+  free(keys);
+}
 
 int main()
 {
@@ -41,7 +59,10 @@ int main()
 
   /* Try the array functions */
   cfg_set_array(cfg, arrayKeys, arrayValues, 2);
+  print_keys(cfg);
+
   cfg_delete_array(cfg, arrayKeys, 2);
+  print_keys(cfg);
   /* cfg_prune(cfg, arrayKeys, 2); */
 
   /* Delete the key-value pair for "DeLeTe_Me" */

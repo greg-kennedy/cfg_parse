@@ -9,8 +9,11 @@
 /* for tolower, isspace */
 #include <ctype.h>
 
-#ifndef SIZE_MAX
-#define SIZE_MAX ((size_t)-1)
+/* SIZE_MAX */
+#if __STDC_VERSION__ >= 199901L
+  #include <stdint.h>
+#elif !defined(SIZE_MAX)
+  #define SIZE_MAX ((size_t)-1)
 #endif
 
 /* implementation details of (opaque) config structures */
@@ -265,6 +268,52 @@ const char* cfg_get(const struct cfg_struct* cfg, const char* key)
 }
 
 /**
+ * Returns an array of strings, one for each key in the config struct.
+ * This array and its contents are dynamically allocated: the caller
+ * should free them when done.
+ * Returns NULL on error.
+ * @param cfg Pointer to cfg_struct to retrieve keys from.
+ * @param count Output parameter: number of keys in the returned array.
+ * @return Array of (count) strings, one for each key in the struct.
+ */
+char** cfg_get_keys(const struct cfg_struct* cfg, size_t* count)
+{
+  char** keys;
+  struct cfg_node* cur;
+
+  /* safety check: null input */
+  if (cfg == NULL) return NULL;
+
+  /* walk the list to count how many keys we have available */
+  *count = 0;
+  cur = cfg->head;
+  while (cur != NULL)
+  {
+    (*count) ++;
+    cur = cur->next;
+  }
+
+  /* now create the array to hold them all */
+  if (SIZE_MAX / sizeof(char*) < *count) return NULL;
+  keys = (char**)cfg_malloc(*count * sizeof(char*));
+
+  /* walk the list again, this time allocating and copying each key */
+  *count = 0;
+  cur = cfg->head;
+  while (cur != NULL)
+  {
+    /* create space to hold the key, and copy it over */
+    keys[*count] = (char*)cfg_malloc(strlen(cur->key) + 1);
+    strcpy(keys[*count], cur->key);
+
+    (*count) ++;
+    cur = cur->next;
+  }
+
+  return keys;
+}
+
+/**
  * This function sets a single key-value pair in a cfg_struct.
  * If the key already exists, its value will be updated.
  * If not, a new item is added to the cfg_struct list.
@@ -293,7 +342,7 @@ void cfg_set(struct cfg_struct* cfg, const char* key, const char* value)
   tvalue = cfg_trim(value);
 
   /* Depending on implementation, you may wish to treat blank value
-     as a "delete" operation */
+      as a "delete" operation */
   /* if (strlen(tvalue) == 0) { free(tvalue); cfg_delete(cfg, tkey); free(tkey); return; } */
 
   /* point at first item in list */
@@ -397,8 +446,8 @@ void cfg_delete(struct cfg_struct* cfg, const char* key)
     prev = cur;
     cur = cur->next;
   }
-
   /* not found */
+
   /* cleanup trimmed key */
   free(tkey);
 }
