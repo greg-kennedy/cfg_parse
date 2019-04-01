@@ -16,7 +16,10 @@
   #define SIZE_MAX ((size_t)-1)
 #endif
 
+/* ************************************************************************* */
 /* implementation details of (opaque) config structures */
+/* ************************************************************************* */
+
 struct cfg_node
 {
   char* key;
@@ -30,8 +33,11 @@ struct cfg_struct
   struct cfg_node* head;
 };
 
-/* Helper functions
-    A malloc() wrapper which handles null return values */
+/* ************************************************************************* */
+/* Helper functions */
+/* ************************************************************************* */
+
+/* A malloc() wrapper which handles null return values */
 static void* cfg_malloc(const size_t size)
 {
   void* ptr;
@@ -100,6 +106,27 @@ static char* cfg_norm_key(const char* key)
 
   return tkey;
 }
+
+/* Creates a node struct with key and value, and returns it */
+static struct cfg_node* cfg_create_node(char* key, char* value)
+{
+  struct cfg_node* cur;
+
+  if (key == NULL || value == NULL) return NULL;
+
+  cur = (struct cfg_node*)cfg_malloc(sizeof(struct cfg_node));
+
+  /* assign key, value */
+  cur->key = key;
+  cur->value = value;
+  cur->next = NULL;
+
+  return cur;
+}
+
+/* ************************************************************************* */
+/* Public functions */
+/* ************************************************************************* */
 
 /**
  * This function initializes a cfg_struct, and must be called before
@@ -329,6 +356,7 @@ void cfg_set(struct cfg_struct* cfg, const char* key, const char* value)
   char* tvalue;
 
   struct cfg_node* cur;
+  struct cfg_node* prev;
 
   /* safety check: null input */
   if (cfg == NULL || key == NULL || value == NULL) return;
@@ -345,35 +373,34 @@ void cfg_set(struct cfg_struct* cfg, const char* key, const char* value)
       as a "delete" operation */
   /* if (strlen(tvalue) == 0) { free(tvalue); cfg_delete(cfg, tkey); free(tkey); return; } */
 
-  /* point at first item in list */
-  cur = cfg->head;
-
-  /* search list for existing key */
-  while (cur != NULL)
+  if (cfg->head == NULL)
   {
-    if (strcmp(tkey, cur->key) == 0)
+    /* list was empty to begin with */
+    cfg->head = cfg_create_node(tkey, tvalue);
+  } else {
+    /* point at first item in list */
+    cur = cfg->head;
+
+    /* search list for existing key */
+    while (cur != NULL)
     {
-      /* found a match: no longer need cur key */
-      free(tkey);
+      if (strcmp(tkey, cur->key) == 0)
+      {
+        /* found a match: no longer need cur key */
+        free(tkey);
 
-      /* update value */
-      free(cur->value);
-      cur->value = tvalue;
-      return;
+        /* update value */
+        free(cur->value);
+        cur->value = tvalue;
+        return;
+      }
+      prev = cur;
+      cur = cur->next;
     }
-    cur = cur->next;
+
+    /* not found: create new element and append it */
+    prev->next = cfg_create_node(tkey, tvalue);
   }
-
-  /* not found: create new element */
-  cur = (struct cfg_node*)cfg_malloc(sizeof(struct cfg_node));
-
-  /* assign key, value */
-  cur->key = tkey;
-  cur->value = tvalue;
-
-  /* prepend */
-  cur->next = cfg->head;
-  cfg->head = cur;
 }
 
 /**

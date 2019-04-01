@@ -18,13 +18,14 @@
  * characters: UTF-8 or other wchar encodings are not supported.
  *
  * cfg_parse structure is internally implemented as a singly-linked list.
- * This means that many operations take O(n) time, and that new items
- * are prepended to the list (so files read from disk are reversed on write).
+ * This means that many operations take O(n) time to complete (lookup,
+ * set/update, delete, etc.)
  *
- * It is not recommended to store a large number of items in the structure
- * if you need high-performance lookup.  Consider an alternate config object
- * (e.g. XML or JSON) in those cases.
- * 
+ * It is not recommended to store a very large number of items in the structure
+ * if you need high-performance lookup.  Of course, if your config file is
+ * complex enough to cause performance issues, this library is probably not
+ * for you - switch to XML or JSON or similar.
+ *
  * @section LICENSE
  * This is free and unencumbered software released into the public domain.
  *
