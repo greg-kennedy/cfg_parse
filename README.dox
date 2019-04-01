@@ -11,6 +11,20 @@
  * Presenting: cfg_parse - a compile-in solution for reading key-value pairs
  * from file(s), looking up settings, and writing a config file back to disk.
  *
+ * @section LIMITATIONS
+ * Comments in the config file are stripped on input and not preserved on
+ * write.  Lookup keys are case-insensitive and may not contain the equals
+ * ('=') character.  All config files are expected to contain only ASCII
+ * characters: UTF-8 or other wchar encodings are not supported.
+ *
+ * cfg_parse structure is internally implemented as a singly-linked list.
+ * This means that many operations take O(n) time, and that new items
+ * are prepended to the list (so files read from disk are reversed on write).
+ *
+ * It is not recommended to store a large number of items in the structure
+ * if you need high-performance lookup.  Consider an alternate config object
+ * (e.g. XML or JSON) in those cases.
+ * 
  * @section LICENSE
  * This is free and unencumbered software released into the public domain.
  *
@@ -18,7 +32,7 @@
  * distribute this software, either in source code form or as a compiled
  * binary, for any purpose, commercial or non-commercial, and by any
  * means.
- * 
+ *
  * In jurisdictions that recognize copyright laws, the author or authors
  * of this software dedicate any and all copyright interest in the
  * software to the public domain. We make this dedication for the benefit
@@ -26,7 +40,7 @@
  * successors. We intend this dedication to be an overt act of
  * relinquishment in perpetuity of all present and future rights to this
  * software under copyright law.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.

@@ -26,7 +26,7 @@
 struct cfg_struct;
 
 /* Declare C-style name mangling,
-	this makes mixing with c++ compilers possible */
+    this makes mixing with c++ compilers possible */
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,6 +55,11 @@ int cfg_save(const struct cfg_struct* cfg, const char* filename);
  * @brief Retrieves a value from a cfg_struct for a specified key.
  */
 const char* cfg_get(const struct cfg_struct* cfg, const char* key);
+
+/**
+ * @brief Retrieves a list of all keys in a cfg_struct.
+ */
+char** cfg_get_keys(const struct cfg_struct* cfg, size_t* count);
 
 /**
  * @brief Sets a key, value pair in a cfg_struct.
