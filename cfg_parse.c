@@ -40,11 +40,9 @@ struct cfg_struct
 /* A malloc() wrapper which handles null return values */
 static void* cfg_malloc(const size_t size)
 {
-  void* ptr;
+  void* ptr =
+    malloc(size);
 
-  if (size == 0) return NULL;
-
-  ptr = malloc(size);
   if (ptr == NULL)
   {
     perror("cfg_parse: ERROR: malloc() returned NULL");
@@ -61,9 +59,6 @@ static char* cfg_trim(const char* str)
   size_t tlen;
   char* tstr;
 
-  /* check for null input first */
-  if (str == NULL) return NULL;
-
   /* advance start pointer to first non-whitespace char */
   while (isspace(*str))
     str ++;
@@ -74,7 +69,7 @@ static char* cfg_trim(const char* str)
     tlen --;
 
   /* copy portion of string to new string */
-  tstr = (char*)cfg_malloc(tlen + 1);
+  tstr = cfg_malloc(tlen + 1);
   tstr[tlen] = '\0';
   if (tlen > 0) memcpy(tstr, str, tlen);
 
@@ -85,24 +80,27 @@ static char* cfg_trim(const char* str)
     Also lowercases the string, AND returns NULL instead of empty str */
 static char* cfg_norm_key(const char* key)
 {
-  size_t i, len;
+  size_t i, tlen;
   char* tkey;
 
-  if (key == NULL) return NULL;
+  /* advance start pointer to first non-whitespace char */
+  while (isspace(*key))
+    key ++;
 
-  /* trim input key */
-  tkey = cfg_trim(key);
+  /* roll back length until we run out of whitespace */
+  tlen = strlen(key);
+  while (tlen > 0 && isspace(key[tlen - 1]))
+    tlen --;
+
   /* Exclude empty key */
-  len = strlen(tkey);
-  if (len == 0)
-  {
-    free(tkey);
-    return NULL;
-  }
+  if (tlen == 0) return NULL;
 
-  /* Lowercase key */
-  for (i = 0; i < len; i++)
-    tkey[i] = tolower(tkey[i]);
+  /* copy portion of string to new string */
+  tkey = cfg_malloc(tlen + 1);
+  tkey[tlen] = '\0';
+  /* Lowercase key and copy */
+  for (i = 0; i < tlen; i++)
+    tkey[i] = tolower(key[i]);
 
   return tkey;
 }
@@ -110,11 +108,8 @@ static char* cfg_norm_key(const char* key)
 /* Creates a node struct with key and value, and returns it */
 static struct cfg_node* cfg_create_node(char* key, char* value)
 {
-  struct cfg_node* cur;
-
-  if (key == NULL || value == NULL) return NULL;
-
-  cur = (struct cfg_node*)cfg_malloc(sizeof(struct cfg_node));
+  struct cfg_node* cur =
+    cfg_malloc(sizeof(struct cfg_node));
 
   /* assign key, value */
   cur->key = key;
@@ -135,9 +130,8 @@ static struct cfg_node* cfg_create_node(char* key, char* value)
  */
 struct cfg_struct* cfg_init()
 {
-  struct cfg_struct* cfg;
-
-  cfg = (struct cfg_struct*)cfg_malloc(sizeof(struct cfg_struct));
+  struct cfg_struct* cfg =
+    cfg_malloc(sizeof(struct cfg_struct));
   cfg->head = NULL;
 
   return cfg;
@@ -167,14 +161,16 @@ void cfg_free(struct cfg_struct* cfg)
 }
 
 /**
- * This function loads data from a file, and inserts / updates the specified cfg_struct.
- * New keys will be inserted.  Existing keys will have values overwritten by those read from the file.
+ * This function loads data from a file, and inserts / updates the specified
+ *  cfg_struct.  New keys will be inserted.  Existing keys will have values
+ *  overwritten by those read from the file.
  * The format of config-files is "key=value", with any amount of whitespace.
- * Comments can be included by using a # character: processing ends at that point.
+ * Comments can be added, beginning with a # character until end-of-line.
  * The maximum line size is CFG_MAX_LINE bytes (see cfg_parse.h)
  * @param cfg Pointer to cfg_struct to update.
  * @param filename String containing filename to open and parse.
- * @return EXIT_SUCCESS (0) on success, or EXIT_FAILURE if file could not be opened.
+ * @return EXIT_SUCCESS (0) on success, or EXIT_FAILURE if file could not be
+ *  opened.
  */
 int cfg_load(struct cfg_struct* cfg, const char* filename)
 {
@@ -220,7 +216,8 @@ int cfg_load(struct cfg_struct* cfg, const char* filename)
  * Comments are not preserved.
  * @param cfg Pointer to cfg_struct to save.
  * @param filename String containing filename to open and parse.
- * @return EXIT_SUCCESS (0) on success, or EXIT_FAILURE if file could not be opened or a write error occurred.
+ * @return EXIT_SUCCESS (0) on success, or EXIT_FAILURE if file could not be
+ *  opened or a write error occurred.
  */
 int cfg_save(const struct cfg_struct* cfg, const char* filename)
 {
@@ -236,7 +233,6 @@ int cfg_save(const struct cfg_struct* cfg, const char* filename)
 
   /* point at first item in list */
   cur = cfg->head;
-
   /* step through the list, dumping each key-value pair to disk */
   while (cur != NULL)
   {
@@ -257,7 +253,8 @@ int cfg_save(const struct cfg_struct* cfg, const char* filename)
 }
 
 /**
- * This function performs a key-lookup on a cfg_struct, and returns the associated value.
+ * This function performs a key-lookup on a cfg_struct, and returns the
+ *  associated value.
  * @param cfg Pointer to cfg_struct to search.
  * @param key String containing key to search for.
  * @return String containing associated value, or NULL if key was not found.
@@ -268,7 +265,7 @@ const char* cfg_get(const struct cfg_struct* cfg, const char* key)
   struct cfg_node* cur;
 
   /* safety check: null input */
-  if (cfg == NULL || key == NULL) return NULL;
+  if (cfg == NULL || cfg->head == NULL || key == NULL) return NULL;
 
   /* Trim input search key */
   tkey = cfg_norm_key(key);
@@ -277,18 +274,16 @@ const char* cfg_get(const struct cfg_struct* cfg, const char* key)
 
   /* set up pointer to start of list */
   cur = cfg->head;
-
   /* loop through linked list looking for match on key
-    if found, free curkey, return the value */
-  while (cur != NULL)
+    if found, free search key, return the value */
+  do
   {
     if (strcmp(tkey, cur->key) == 0)
     {
       free(tkey);
       return cur->value;
     }
-    cur = cur->next;
-  }
+  } while ((cur = cur->next) != NULL);
 
   free(tkey);
   return NULL;
@@ -298,42 +293,36 @@ const char* cfg_get(const struct cfg_struct* cfg, const char* key)
  * Returns an array of strings, one for each key in the config struct.
  * This array and its contents are dynamically allocated: the caller
  * should free them when done.
- * Returns NULL on error.
  * @param cfg Pointer to cfg_struct to retrieve keys from.
  * @param count Output parameter: number of keys in the returned array.
- * @return Array of (count) strings, one for each key in the struct.
+ * @return Array of (count) strings, one for each key in the struct, or NULL
+ *  in case of error or empty struct.
  */
 char** cfg_get_keys(const struct cfg_struct* cfg, size_t* count)
 {
+  size_t i;
   char** keys;
   struct cfg_node* cur;
 
   /* safety check: null input */
-  if (cfg == NULL) return NULL;
+  if (cfg == NULL || cfg->head == NULL) return NULL;
 
   /* walk the list to count how many keys we have available */
-  *count = 0;
-  cur = cfg->head;
-  while (cur != NULL)
-  {
-    (*count) ++;
-    cur = cur->next;
-  }
+  i = 0;
+  for (cur = cfg->head; cur != NULL; cur = cur->next)
+    i ++;
 
   /* now create the array to hold them all */
-  if (SIZE_MAX / sizeof(char*) < *count) return NULL;
-  keys = (char**)cfg_malloc(*count * sizeof(char*));
+  if (SIZE_MAX / sizeof(char*) < i) return NULL;
+  keys = cfg_malloc(i * sizeof(char*));
 
   /* walk the list again, this time allocating and copying each key */
-  *count = 0;
   cur = cfg->head;
-  while (cur != NULL)
+  for (*count = 0; *count < i; (*count) ++)
   {
     /* create space to hold the key, and copy it over */
-    keys[*count] = (char*)cfg_malloc(strlen(cur->key) + 1);
+    keys[*count] = cfg_malloc(strlen(cur->key) + 1);
     strcpy(keys[*count], cur->key);
-
-    (*count) ++;
     cur = cur->next;
   }
 
@@ -344,8 +333,7 @@ char** cfg_get_keys(const struct cfg_struct* cfg, size_t* count)
  * This function sets a single key-value pair in a cfg_struct.
  * If the key already exists, its value will be updated.
  * If not, a new item is added to the cfg_struct list.
- * There is a commented-out option to treat blank value as a delete operation:
- *  uncomment if your project needs this feature.
+ * For convenience, a NULL value is treated as a call to cfg_delete().
  * @param cfg Pointer to cfg_struct to search.
  * @param key String containing key to search for.
  * @param value String containing new value to assign to key.
@@ -356,10 +344,16 @@ void cfg_set(struct cfg_struct* cfg, const char* key, const char* value)
   char* tvalue;
 
   struct cfg_node* cur;
-  struct cfg_node* prev;
+
+  /* Treat NULL value as a "delete" operation */
+  if (value == NULL)
+  {
+    cfg_delete(cfg, key);
+    return;
+  }
 
   /* safety check: null input */
-  if (cfg == NULL || key == NULL || value == NULL) return;
+  if (cfg == NULL || key == NULL) return;
 
   /* Trim input search key */
   tkey = cfg_norm_key(key);
@@ -369,20 +363,16 @@ void cfg_set(struct cfg_struct* cfg, const char* key, const char* value)
   /* Trim value. */
   tvalue = cfg_trim(value);
 
-  /* Depending on implementation, you may wish to treat blank value
-      as a "delete" operation */
-  /* if (strlen(tvalue) == 0) { free(tvalue); cfg_delete(cfg, tkey); free(tkey); return; } */
-
   if (cfg->head == NULL)
   {
     /* list was empty to begin with */
     cfg->head = cfg_create_node(tkey, tvalue);
   } else {
-    /* point at first item in list */
-    cur = cfg->head;
+    struct cfg_node* prev;
 
     /* search list for existing key */
-    while (cur != NULL)
+    cur = cfg->head;
+    do
     {
       if (strcmp(tkey, cur->key) == 0)
       {
@@ -395,8 +385,7 @@ void cfg_set(struct cfg_struct* cfg, const char* key, const char* value)
         return;
       }
       prev = cur;
-      cur = cur->next;
-    }
+    } while ((cur = cur->next) != NULL);
 
     /* not found: create new element and append it */
     prev->next = cfg_create_node(tkey, tvalue);
@@ -415,7 +404,7 @@ void cfg_set_array(struct cfg_struct* cfg, const char* keys[], const char* value
   size_t i;
 
   /* safety check: null input */
-  if (cfg == NULL || keys == NULL || values == NULL) return;
+  if (cfg == NULL || keys == NULL || values == NULL || count == 0) return;
 
   /* Call cfg_set on every item in the lists */
   for (i = 0; i < count; i ++)
@@ -435,18 +424,16 @@ void cfg_delete(struct cfg_struct* cfg, const char* key)
   struct cfg_node* prev;
 
   /* safety check: null input */
-  if (cfg == NULL || key == NULL) return;
+  if (cfg == NULL || cfg->head == NULL || key == NULL) return;
 
   /* Trim input search key */
   tkey = cfg_norm_key(key);
   /* Exclude empty key */
   if (tkey == NULL) return;
 
-  /* set pointer to start of list */
-  cur = cfg->head;
-
   /* search list for existing key */
-  while (cur != NULL)
+  cur = cfg->head;
+  do
   {
     if (strcmp(tkey, cur->key) == 0)
     {
@@ -471,8 +458,7 @@ void cfg_delete(struct cfg_struct* cfg, const char* key)
     }
 
     prev = cur;
-    cur = cur->next;
-  }
+  } while ((cur = cur->next) != NULL);
   /* not found */
 
   /* cleanup trimmed key */
@@ -490,7 +476,7 @@ void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], const size_t c
   size_t i;
 
   /* safety check: null input */
-  if (cfg == NULL || keys == NULL) return;
+  if (cfg == NULL || cfg->head == NULL || keys == NULL || count == 0) return;
 
   /* Call cfg_delete on every item in the list */
   for (i = 0; i < count; i ++)
@@ -510,31 +496,46 @@ void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], const size_t c
 void cfg_prune(struct cfg_struct* cfg, const char* keys[], const size_t count)
 {
   char** tkeys;
-  size_t i;
+  size_t i, j;
 
   struct cfg_node* cur;
   struct cfg_node* prev;
 
   /* safety check: null input */
-  if (cfg == NULL || keys == NULL || SIZE_MAX / sizeof(char*) < count) return;
+  if (cfg == NULL || cfg->head == NULL || keys == NULL || count == 0 ||
+    SIZE_MAX / sizeof(char*) < count) return;
 
   /* First we must prep every key in keys[] using the normalize function. */
-  tkeys = (char**)cfg_malloc(count * sizeof(char*));
+  tkeys = cfg_malloc(count * sizeof(char*));
+
+  j = 0;
   for (i = 0; i < count; i ++)
-    tkeys[i] = cfg_norm_key(keys[i]);
+  {
+    char *tkey;
+
+    if (keys[i] == NULL) continue;
+    tkey = cfg_norm_key(keys[i]);
+    if (tkey == NULL) continue;
+    
+    tkeys[j] = tkey;
+    j ++;
+  }
+
+  if (j == 0)
+  {
+    free(tkeys);
+    return;
+  }
 
   /* Now iterate through the cfg struct and test every entry */
-  /* set pointer to start of list */
   cur = cfg->head;
-
-  /* search list for existing key */
-  while (cur != NULL)
+  do
   {
-    for (i = 0; i < count; i ++)
-      if (tkeys[i] != NULL && strcmp(tkeys[i], cur->key) == 0)
+    for (i = 0; i < j; i ++)
+      if (strcmp(tkeys[i], cur->key) == 0)
         break;
 
-    if (i == count)
+    if (i == j)
     {
       /* Didn't find a key match - delete this */
       free(cur->value);
@@ -557,10 +558,10 @@ void cfg_prune(struct cfg_struct* cfg, const char* keys[], const size_t count)
       prev = cur;
       cur = cur->next;
     }
-  }
+  } while (cur != NULL);
 
   /* Cleanup all our trimmed keys */
-  for (i = 0; i < count; i ++)
+  for (i = 0; i < j; i ++)
     free(tkeys[i]);
   free(tkeys);
 }
