@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void print_keys(struct cfg_struct* cfg)
 {
@@ -22,6 +23,18 @@ void print_keys(struct cfg_struct* cfg)
   free(keys);
 }
 
+char* get_local_config()
+{
+  char* homeconfig;
+  const char* homedir = getenv("HOME");
+  if (homedir == NULL) return NULL;
+
+  homeconfig = malloc(strlen(homedir) + 9);
+  strcpy(homeconfig, homedir);
+  strcat(homeconfig, "/.config");
+  return homeconfig;
+}
+
 int main()
 {
   /* Pointer to a cfg_struct structure */
@@ -31,31 +44,38 @@ int main()
   const char* arrayKeys[] = {"ARRAY_KEY_1", NULL, "ARRAY_KEY_2"};
   const char* arrayValues[] = {"ARRAY_VALUE_1", NULL, "ARRAY_VALUE_2"};
 
+  /* path to config file in user's home */
+  char* homeconfig = get_local_config();
+  
   /* Initialize config struct */
   cfg = cfg_init();
 
   /* Specifying some defaults */
-  cfg_set(cfg,"KEY","VALUE");
-  cfg_set(cfg,"KEY_A","DEFAULT_VALUE_A");
+  cfg_set(cfg, "KEY", "VALUE");
+  cfg_set(cfg, "KEY_A", "DEFAULT_VALUE_A");
 
   /* "Required" file */
-  if (cfg_load(cfg,"config.ini") < 0)
+  if (cfg_load(cfg, "config.ini") < 0)
   {
-    fprintf(stderr,"Unable to load cfg.ini\n");
-    return -1;
+    fprintf(stderr, "Unable to load cfg.ini\n");
+    return EXIT_FAILURE;
   }
 
   /* Several "optional" files can be added as well
       Each subsequent call upserts values already in
       the cfg structure. */
-  cfg_load(cfg,"/usr/local/etc/config.ini");
-  cfg_load(cfg,"~/.config");
+  cfg_load(cfg, "/usr/local/etc/config.ini");
+  if (homeconfig)
+  {
+    cfg_load(cfg, homeconfig);
+    free(homeconfig);
+  }
 
   /* Retrieve the value for key INFINITY, and print */
-  printf("INFINITY = %s\n",cfg_get(cfg,"INFINITY"));
+  printf("INFINITY = %s\n", cfg_get(cfg, "INFINITY"));
 
   /* Retrieve the value for key "KEY", and print */
-  printf("KEY = %s\n",cfg_get(cfg,"KEY"));
+  printf("KEY = %s\n", cfg_get(cfg, "KEY"));
 
   /* Try the array functions */
   cfg_set_array(cfg, arrayKeys, arrayValues, 3);
@@ -66,13 +86,13 @@ int main()
   print_keys(cfg);
 
   /* Delete the key-value pair for "DeLeTe_Me" */
-  cfg_delete(cfg,"DeLeTe_Me");
+  cfg_delete(cfg, "DeLeTe_Me");
 
   /* Dump cfg-struct to disk. */
-  cfg_save(cfg,"config_new.ini");
+  cfg_save(cfg, "config_new.ini");
 
   /* All done, clean up. */
   cfg_free(cfg);
 
-  return 0;
+  return EXIT_SUCCESS;
 }
