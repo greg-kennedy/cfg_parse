@@ -185,26 +185,28 @@ int cfg_load(struct cfg_struct* cfg, const char* filename)
   fp = fopen(filename, "r");
   if (fp == NULL) return EXIT_FAILURE;
 
-  while (!feof(fp))
+  while (fgets(buffer, CFG_MAX_LINE + 1, fp) != NULL)
   {
-    if (fgets(buffer, CFG_MAX_LINE + 1, fp) != NULL)
+    /* locate first # sign and terminate string there (comment) */
+    delim = strchr(buffer, '#');
+    if (delim != NULL) *delim = '\0';
+
+    /* locate first = sign and prepare to split */
+    delim = strchr(buffer, '=');
+    if (delim != NULL)
     {
-      /* locate first # sign and terminate string there (comment) */
-      delim = strchr(buffer, '#');
-      if (delim != NULL) *delim = '\0';
+      *delim = '\0';
+      delim ++;
 
-      /* locate first = sign and prepare to split */
-      delim = strchr(buffer, '=');
-      if (delim != NULL)
-      {
-        *delim = '\0';
-        delim ++;
-
-        cfg_set(cfg, buffer, delim);
-      }
-      /* else: seems to be an invalid line */
+      cfg_set(cfg, buffer, delim);
     }
-    /* else: read error */
+    /* else: no '=', so either a blank or invalid line */
+  }
+
+  /* print warning in case the read attempt failed but not because EOF */
+  if (!feof(fp))
+  {
+    perror("cfg_parse: Warning: cfg_load() early termination:");
   }
 
   fclose(fp);
