@@ -9,13 +9,6 @@
 /* for tolower, isspace */
 #include <ctype.h>
 
-/* SIZE_MAX */
-#if __STDC_VERSION__ >= 199901L
-  #include <stdint.h>
-#elif !defined(SIZE_MAX)
-  #define SIZE_MAX ((size_t)-1)
-#endif
-
 /* ************************************************************************* */
 /* implementation details of (opaque) config structures */
 /* ************************************************************************* */
@@ -38,7 +31,7 @@ struct cfg_struct
 /* ************************************************************************* */
 
 /* A malloc() wrapper which handles null return values */
-static void* cfg_malloc(const size_t size)
+static void* cfg_malloc(const unsigned int size)
 {
   void* ptr =
     malloc(size);
@@ -56,7 +49,7 @@ static void* cfg_malloc(const size_t size)
     Input str *MUST* be null-terminated, or disaster will result */
 static char* cfg_trim(const char* str)
 {
-  size_t tlen;
+  unsigned int tlen;
   char* tstr;
 
   /* advance start pointer to first non-whitespace char */
@@ -80,7 +73,7 @@ static char* cfg_trim(const char* str)
     Also lowercases the string, AND returns NULL instead of empty str */
 static char* cfg_norm_key(const char* key)
 {
-  size_t i, tlen;
+  unsigned int i, tlen;
   char* tkey;
 
   /* advance start pointer to first non-whitespace char */
@@ -100,7 +93,7 @@ static char* cfg_norm_key(const char* key)
   tkey[tlen] = '\0';
   /* Lowercase key and copy */
   for (i = 0; i < tlen; i++)
-    tkey[i] = tolower(key[i]);
+    tkey[i] = (char)tolower(key[i]);
 
   return tkey;
 }
@@ -128,7 +121,7 @@ static struct cfg_node* cfg_create_node(char* key, char* value)
  * performing any further operations.
  * @return Pointer to newly initialized cfg_struct object.
  */
-struct cfg_struct* cfg_init()
+struct cfg_struct* cfg_init(void)
 {
   struct cfg_struct* cfg =
     cfg_malloc(sizeof(struct cfg_struct));
@@ -299,9 +292,9 @@ const char* cfg_get(const struct cfg_struct* cfg, const char* key)
  * @return Array of (count) strings, one for each key in the struct, or NULL
  *  in case of error or empty struct.
  */
-char** cfg_get_keys(const struct cfg_struct* cfg, size_t* count)
+char** cfg_get_keys(const struct cfg_struct* cfg, unsigned int* count)
 {
-  size_t i;
+  unsigned int i;
   char** keys;
   struct cfg_node* cur;
 
@@ -314,7 +307,7 @@ char** cfg_get_keys(const struct cfg_struct* cfg, size_t* count)
     i ++;
 
   /* now create the array to hold them all */
-  if (SIZE_MAX / sizeof(char*) < i) return NULL;
+  if (UINT_MAX / sizeof(char*) < i) return NULL;
   keys = cfg_malloc(i * sizeof(char*));
 
   /* walk the list again, this time allocating and copying each key */
@@ -400,9 +393,9 @@ void cfg_set(struct cfg_struct* cfg, const char* key, const char* value)
  * @param values Array of strings containing new value to assign to key.
  * @param count Length of keys / values arrays
  */
-void cfg_set_array(struct cfg_struct* cfg, const char* keys[], const char* values[], const size_t count)
+void cfg_set_array(struct cfg_struct* cfg, const char* keys[], const char* values[], const unsigned int count)
 {
-  size_t i;
+  unsigned int i;
 
   /* safety check: null input */
   if (cfg == NULL || keys == NULL || values == NULL || count == 0) return;
@@ -422,7 +415,7 @@ void cfg_delete(struct cfg_struct* cfg, const char* key)
 {
   char* tkey;
   struct cfg_node* cur;
-  struct cfg_node* prev;
+  struct cfg_node* prev = NULL;
 
   /* safety check: null input */
   if (cfg == NULL || cfg->head == NULL || key == NULL) return;
@@ -472,9 +465,9 @@ void cfg_delete(struct cfg_struct* cfg, const char* key)
  * @param keys Array of strings containing key to search for.
  * @param count Length of keys array
  */
-void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], const size_t count)
+void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], const unsigned int count)
 {
-  size_t i;
+  unsigned int i;
 
   /* safety check: null input */
   if (cfg == NULL || cfg->head == NULL || keys == NULL || count == 0) return;
@@ -494,17 +487,17 @@ void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], const size_t c
  * @param keys Array of strings containing keys to keep
  * @param count Length of keys array
  */
-void cfg_prune(struct cfg_struct* cfg, const char* keys[], const size_t count)
+void cfg_prune(struct cfg_struct* cfg, const char* keys[], const unsigned int count)
 {
   char** tkeys;
-  size_t i, j;
+  unsigned int i, j;
 
   struct cfg_node* cur;
-  struct cfg_node* prev;
+  struct cfg_node* prev = NULL;
 
   /* safety check: null input */
   if (cfg == NULL || cfg->head == NULL || keys == NULL || count == 0 ||
-    SIZE_MAX / sizeof(char*) < count) return;
+    UINT_MAX / sizeof(char*) < count) return;
 
   /* First we must prep every key in keys[] using the normalize function. */
   tkeys = cfg_malloc(count * sizeof(char*));

@@ -6,11 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-void print_keys(struct cfg_struct* cfg)
+static void print_keys(const struct cfg_struct* cfg)
 {
   char** keys;
-  size_t count;
-  size_t i;
+  unsigned int i, count;
 
   keys = cfg_get_keys(cfg, &count);
 
@@ -23,7 +22,7 @@ void print_keys(struct cfg_struct* cfg)
   free(keys);
 }
 
-char* get_local_config()
+static char* get_local_config(void)
 {
   char* homeconfig;
   const char* homedir = getenv("HOME");
@@ -35,8 +34,10 @@ char* get_local_config()
   return homeconfig;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+  int i;
+
   /* Pointer to a cfg_struct structure */
   struct cfg_struct* cfg;
 
@@ -70,6 +71,10 @@ int main()
     cfg_load(cfg, homeconfig);
     free(homeconfig);
   }
+
+  /* Reading anything from CLI args works too */
+  for (i = 1; i < argc; i++)
+    cfg_load(cfg, argv[i]);
 
   /* Retrieve the value for key INFINITY, and print */
   printf("INFINITY = %s\n", cfg_get(cfg, "INFINITY"));

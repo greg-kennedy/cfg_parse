@@ -11,8 +11,6 @@
 #ifndef CFG_PARSE_H_
 #define CFG_PARSE_H_
 
-#include <stddef.h>
-
 /**
  * @brief Sets the maximum size of a line in a configuration file.
  *
@@ -34,7 +32,7 @@ extern "C" {
 /**
  * @brief Creates a cfg_struct.
  */
-struct cfg_struct* cfg_init();
+struct cfg_struct* cfg_init(void);
 
 /**
  * @brief Frees a cfg_struct.
@@ -59,7 +57,7 @@ const char* cfg_get(const struct cfg_struct* cfg, const char* key);
 /**
  * @brief Retrieves a list of all keys in a cfg_struct.
  */
-char** cfg_get_keys(const struct cfg_struct* cfg, size_t* count);
+char** cfg_get_keys(const struct cfg_struct* cfg, unsigned int* count);
 
 /**
  * @brief Sets a key, value pair in a cfg_struct.
@@ -69,7 +67,7 @@ void cfg_set(struct cfg_struct* cfg, const char* key, const char* value);
 /**
  * @brief Sets multiple key, value pairs in a cfg_struct.
  */
-void cfg_set_array(struct cfg_struct* cfg, const char* keys[], const char* values[], size_t count);
+void cfg_set_array(struct cfg_struct* cfg, const char* keys[], const char* values[], unsigned int count);
 
 /**
  * @brief Deletes a key (and associated value) from a cfg_struct.
@@ -79,12 +77,12 @@ void cfg_delete(struct cfg_struct* cfg, const char* key);
 /**
  * @brief Deletes multiple keys (and associated values) from a cfg_struct.
  */
-void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], size_t count);
+void cfg_delete_array(struct cfg_struct* cfg, const char* keys[], unsigned int count);
 
 /**
  * @brief Deletes all entries not found in keys[] from a cfg_struct.
  */
-void cfg_prune(struct cfg_struct* cfg, const char* keys[], size_t count);
+void cfg_prune(struct cfg_struct* cfg, const char* keys[], unsigned int count);
 
 #ifdef __cplusplus
 }
